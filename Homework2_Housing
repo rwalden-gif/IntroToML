@@ -1,1 +1,41 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
+url = 'https://raw.githubusercontent.com/rwalden-gif/IntroToML/main/Housing.csv'
+df = pd.read_csv(url)
+
+binary_cols = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea']
+for col in binary_cols:
+    df[col] = df[col].map({'yes': 1, 'no': 0})
+
+# Shuffle dataset and perform 80/20 split
+np.random.seed(42)
+shuffled_df = df.sample(frac=1, random_state=42).reset_index(drop=True)
+split_idx = int(0.8 * len(shuffled_df))
+
+train_df = shuffled_df.iloc[:split_idx]
+test_df = shuffled_df.iloc[split_idx:]
+
+features_a = ['area', 'bedrooms', 'bathrooms', 'stories', 'parking']
+features_b = ['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad', 
+              'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 
+              'parking', 'prefarea']
+
+X_tr_a, X_te_a = train_df[features_a].values, test_df[features_a].values
+X_tr_b, X_te_b = train_df[features_b].values, test_df[features_b].values
+y_tr, y_te = train_df['price'].values, test_df['price'].values
+
+def standardize(X_tr, X_te):
+    mean, std = np.mean(X_tr, axis=0), np.std(X_tr, axis=0)
+    return (X_tr - mean) / std, (X_te - mean) / std
+
+def normalize(X_tr, X_te):
+    x_min, x_max = np.min(X_tr, axis=0), np.max(X_tr, axis=0)
+    return (X_tr - x_min) / (x_max - x_min), (X_te - x_min) / (x_max - x_min)
+
+X_tr_a_std, X_te_a_std = standardize(X_tr_a, X_te_a)
+X_tr_a_norm, X_te_a_norm = normalize(X_tr_a, X_te_a)
+
+X_tr_b_std, X_te_b_std = standardize(X_tr_b, X_te_b)
+X_tr_b_norm, X_te_b_norm = normalize(X_tr_b, X_te_b)
